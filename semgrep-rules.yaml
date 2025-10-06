@@ -1,0 +1,153 @@
+rules:
+  - id: sql-injection-f-string
+    pattern: db.execute(f"... {$VAR} ...")
+    message: |
+      SQL injection vulnerability detected!
+      User input '$VAR' is directly interpolated into an f-string SQL query.
+      This allows attackers to manipulate the SQL query structure.
+      
+      Recommendation: Use parameterized queries instead.
+      Safe: db.execute("SELECT * FROM users WHERE name = ?", (user_input,))
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+      owasp: "A03:2021 - Injection"
+      confidence: HIGH
+      
+  - id: command-injection-os-system
+    pattern: os.system($CMD)
+    message: |
+      Command injection vulnerability detected!
+      Calling os.system() with user-controlled input allows arbitrary command execution.
+      
+      Recommendation: Use subprocess with a list of arguments (no shell=True).
+      Safe: subprocess.run(['ping', '-c', '1', host], capture_output=True)
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+      owasp: "A03:2021 - Injection"
+      
+  - id: command-injection-subprocess-shell
+    pattern: subprocess.$FUNC(..., shell=True)
+    message: |
+      Shell injection vulnerability detected!
+      Using shell=True with user input allows command injection attacks.
+      
+      Recommendation: Remove shell=True and pass arguments as a list.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+      
+  - id: code-injection-eval
+    pattern: eval($CODE)
+    message: |
+      Code injection vulnerability detected!
+      Using eval() on user input allows arbitrary Python code execution.
+      
+      Recommendation: Never use eval() on untrusted input. Use ast.literal_eval() for safe evaluation of literals.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+      owasp: "A03:2021 - Injection"
+      
+  - id: hardcoded-api-key
+    patterns:
+      - pattern-either:
+          - pattern: $VAR = "sk-..."
+          - pattern: $VAR = "ghp_..."
+          - pattern: API_KEY = "..."
+          - pattern: SECRET_TOKEN = "..."
+          - pattern: SECRET_KEY = "..."
+    message: |
+      Hardcoded API key or secret detected!
+      Storing secrets in source code exposes them to anyone with repository access.
+      
+      Recommendation: Use environment variables or a secrets manager.
+      Safe: API_KEY = os.getenv('API_KEY')
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+      owasp: "A07:2021 - Identification and Authentication Failures"
+      
+  - id: hardcoded-password
+    patterns:
+      - pattern-either:
+          - pattern: PASSWORD = "..."
+          - pattern: DB_PASSWORD = "..."
+          - pattern: $PASSWORD = "..."
+    message: |
+      Hardcoded password detected!
+      Passwords should never be stored in source code.
+      
+      Recommendation: Use environment variables or secrets management.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+      
+  - id: flask-debug-mode
+    pattern: app.run(..., debug=True, ...)
+    message: |
+      Flask debug mode enabled!
+      Running Flask with debug=True in production exposes sensitive information and allows remote code execution.
+      
+      Recommendation: Never enable debug mode in production. Use environment-based configuration.
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-215: Information Exposure Through Debug Information"
+      
+  - id: server-side-template-injection
+    pattern: render_template_string($TEMPLATE)
+    message: |
+      Server-Side Template Injection (SSTI) vulnerability detected!
+      Using render_template_string() with user input allows template injection attacks.
+      
+      Recommendation: Never render user-controlled templates. Use static templates with safe variables.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+      owasp: "A03:2021 - Injection"
+      
+  - id: path-traversal
+    pattern: open(f"... {$PATH} ...", ...)
+    message: |
+      Path traversal vulnerability detected!
+      Using user input in file paths allows attackers to access arbitrary files.
+      
+      Example attack: filename='../../etc/passwd'
+      Recommendation: Validate and sanitize file paths, use os.path.join with base directory checks.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-22: Path Traversal"
+      owasp: "A01:2021 - Broken Access Control"
+      
+  - id: unsafe-deserialization
+    pattern: pickle.loads($DATA)
+    message: |
+      Unsafe deserialization vulnerability detected!
+      pickle.loads() on untrusted data allows arbitrary code execution.
+      
+      Recommendation: Use safe serialization formats like JSON. Never unpickle untrusted data.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+      owasp: "A08:2021 - Software and Data Integrity Failures"

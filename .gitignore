@@ -13,11 +13,9 @@ instance/
 .webassets-cache
 *.db
 
-# CodeQL
-codeql-database/
-python-db/
-results.sarif
-*.bqrs
+# Semgrep
+.semgrep/
+.semgrep_logs/
 
 # IDE
 .vscode/
